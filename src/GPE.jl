@@ -123,11 +123,13 @@ end
 #———————————————————————————————————————————————————————————————-
 #Functions for calculating the log-target
 
+const ϵ = eps()
+
 """ GPE: Initialise the marginal log-likelihood """
 function initialise_mll!(gp::GPE)
     μ = mean(gp.m,gp.X)
     Σ = cov(gp.k, gp.X, gp.data)
-    gp.cK = PDMat(Σ + (exp(2*gp.logNoise) + 1e-5)*I)
+    gp.cK = PDMat(Σ + (exp(2*gp.logNoise) + ϵ)*I)
     gp.alpha = gp.cK \ (gp.y - μ)
     gp.mll = -dot((gp.y - μ),gp.alpha)/2.0 - logdet(gp.cK)/2.0 - gp.nobsv*log(2π)/2.0 # Marginal log-likelihood
 end    
@@ -139,7 +141,7 @@ function update_cK!(gp::GPE)
     old_cK = gp.cK
     Σbuffer = old_cK.mat
     cov!(Σbuffer, gp.k, gp.X, gp.data)
-    noise = (exp(2*gp.logNoise) + 1e-5)
+    noise = (exp(2*gp.logNoise) + ϵ)
     for i in 1:gp.nobsv
         Σbuffer[i,i] += noise
     end
